@@ -4,6 +4,46 @@ from logic.authorization import auto_assign_authorization
 from emailer.notifications import send_approval_email
 from logic.auth_context import CURRENT_AUTHORIZER, current_timestamp
 from datetime import datetime
+import qrcode
+from PIL import Image
+import os
+from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+
+load_dotenv()
+BASE_URL = os.getenv("BASE_URL", "http://localhost:5000")
+fernet = Fernet(os.getenv("FERNET_KEY").encode())
+
+
+def generate_qr_with_logo(data, logo_path, output_path):
+    # Step 1: Create QR code
+    qr = qrcode.QRCode(
+        version=4,  # smaller QR version (1–40)
+        error_correction=qrcode.constants.ERROR_CORRECT_H,  # High correction for logo overlay
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+
+    # Step 2: Create QR image
+    qr_img = qr.make_image(fill_color="dark blue", back_color="white").convert("RGB")
+
+    # Step 3: Load the owl logo
+    logo = Image.open(logo_path)
+
+    # Step 4: Resize logo relative to QR code
+    qr_width, qr_height = qr_img.size
+    logo_size = int(qr_width / 4)  # logo is 1/4th of QR size
+    logo = logo.resize((logo_size, logo_size), Image.LANCZOS)
+
+    # Step 5: Paste logo into center of QR
+    pos = ((qr_width - logo_size) // 2, (qr_height - logo_size) // 2)
+    qr_img.paste(logo, pos, mask=logo if logo.mode == 'RGBA' else None)
+
+    # Step 6: Save final QR code
+    qr_img.save(output_path)
+    return output_path
 
 
 
@@ -185,7 +225,7 @@ def approve_drone(
     approved_role = CURRENT_AUTHORIZER["role"]
     approved_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # ✅ Generate QR code with encrypted token
-    verify_url, qr_path = generate_qr(drone_id)
+    qr_path, verify_url = generate_qr_code(qr_content)
 
     send_approval_email(
         email,
