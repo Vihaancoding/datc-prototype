@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ company }} Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen px-8 py-12">
+
+{% include "header.html" %}
+
+<style>
+  /* ✅ Smooth Hide-on-Scroll Animation */
+  .hidden-header {
+    transform: translateY(-100%);
+    transition: transform 0.4s ease-in-out;
+  }
+  .visible-header {
+    transform: translateY(0);
+    transition: transform 0.4s ease-in-out;
+  }
+</style>
+
+<script>
+  // ✅ Header Hide on Scroll Down, Show on Scroll Up
+  let lastScrollTop = 0;
+  const header = document.getElementById("main-header");
+
+  window.addEventListener("scroll", function() {
+    let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+    if (currentScroll > lastScrollTop) {
+      header.classList.remove("visible-header");
+      header.classList.add("hidden-header");
+    } else {
+      header.classList.remove("hidden-header");
+      header.classList.add("visible-header");
+    }
+    lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
+  }, false);
+</script>
+
+
+  <!-- ✅ Welcome Section -->
+  <h1 class="text-3xl font-bold mb-8 mt-6">🚀 Welcome, {{ company }}</h1>
+  <h2 class="text-xl mb-2">Your Registered Drones:</h2>
+
+  <!-- ✅ Drones Grid -->
+  {% if drones %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {% for drone in drones %}
+      <a href="{{ url_for('drone_map', drone_id=drone[0]) }}">
+        <div class="bg-gray-800 rounded-lg shadow-md p-4 hover:bg-gray-700 transition cursor-pointer">
+          <h3 class="text-lg font-semibold mb-2">{{ drone[0] }}</h3>
+          <p class="text-sm text-gray-300"><strong>Type:</strong> {{ drone[1] }}</p>
+          <p class="text-sm text-gray-300"><strong>Year:</strong> {{ drone[2] }}</p>
+          <p class="text-sm text-gray-300"><strong>Drone ID:</strong> {{ drone[4] }}</p>
+          <p class="text-sm mt-1">
+            <strong>Status:</strong>
+            {% if drone[3] == 1 %}
+              <span class="text-green-400">✅ Active</span>
+            {% else %}
+              <span class="text-red-400">❌ Suspended</span>
+            {% endif %}
+          </p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-400">No drones registered under your company.</p>
+  {% endif %}
+
+</body>
+</html>

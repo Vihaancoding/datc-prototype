@@ -1,0 +1,9 @@
+cryptography>=41,<44
+Flask>=3.0,<3.2
+geopy>=2.3,<2.5
+networkx>=3.2,<3.4
+Pillow>=10.0,<12.1
+python-dotenv>=1.0,<1.1
+bcrypt>=4.0,<4.2
+qrcode>=7.4,<9
+Shapely>=2.0,<2.2

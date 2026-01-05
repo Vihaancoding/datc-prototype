@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ company }} - Manage Flights</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen px-8 py-12">
+
+  {% include "header.html" %}
+
+  <h1 class="text-3xl font-bold mb-6">✈️ Manage Flight Plans</h1>
+
+  {% if flights %}
+    <div class="overflow-x-auto"><table>
+  <table class="table-auto w-full text-left">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Drone ID</th>
+      <th>Origin</th>
+      <th>Destination</th>
+      <th>Date</th>
+      <th>Flight Time</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for f in flights %}
+    <tr>
+      <td>{{ f[0] }}</td>
+      <td>{{ f[1] }}</td>
+      <td>{{ f[2] }}</td>
+      <td>{{ f[3] }}</td>
+      <td>{{ f[4] }}</td>
+      <td>{{ f[5] }}</td>
+      <td>{{ f[6] }}</td>
+      <td>
+        <a href="{{ url_for('flight_plan_map',
+                             drone_id=f[1],
+                             origin=f[2],
+                             destination=f[3],
+                             time=f[5]) }}"
+           class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+          View Plan
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+    </div>
+  {% else %}
+    <p class="text-gray-400 mt-4">No flight requests for your drones yet.</p>
+  {% endif %}
+</body>
+</html>

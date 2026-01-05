@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drone Verified – DATC</title>
+    <style>
+        body { background-color: #1e1e1e; color: white; font-family: Consolas, monospace; padding: 30px; }
+        h1 { color: #00ffcc; }
+        p { margin-bottom: 10px; }
+        .status { font-weight: bold; font-size: 18px; color: #ffcc00; }
+    </style>
+</head>
+<body>
+    <h1>✅ Drone License Verified</h1>
+    <p><strong>Drone ID:</strong> {{ drone_id }}</p>
+    <p><strong>Company:</strong> {{ name }}</p>
+    <p><strong>Type:</strong> {{ dtype }}</p>
+    <p><strong>Year:</strong> {{ year }}</p>
+    <p><strong>Model:</strong> {{ model }}</p>
+    <p><strong>Manufacturer:</strong> {{ manufacturer }}</p>
+    <p class="status"><strong>Status:</strong> {{ status }}</p>
+    <p><strong>Expiry Date:</strong> {{ license_expiry }}</p>
+<img src="{{ url_for('static', filename='owl_stamp.png') }}" alt="Verified Stamp"
+     style="position:absolute; top:30px; right:30px; width:100px; opacity:0.8;" />
+    <p><strong>Flight Controller:</strong> {{ controller }}</p>
+</body>
+
+
+</html>

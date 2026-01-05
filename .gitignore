@@ -1,0 +1,15 @@
+# Environments
+venv/
+venv1/
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Databases
+*.db
+*.sqbpro
+
+# OS files
+.DS_Store

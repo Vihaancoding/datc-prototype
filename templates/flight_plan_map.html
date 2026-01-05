@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flight Plan - {{ drone_id }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center">
+<!-- ✅ Sticky Header (Copy & Paste) -->
+{% include "header.html" %}
+
+
+<style>
+
+</style>
+
+<script>
+  // ✅ Header Hide on Scroll Down, Show on Scroll Up
+  let lastScrollTop = 0;
+  const header = document.getElementById("main-header");
+
+  window.addEventListener("scroll", function() {
+    let currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+    if (currentScroll > lastScrollTop) {
+      header.classList.remove("visible-header");
+      header.classList.add("hidden-header");
+    } else {
+      header.classList.remove("hidden-header");
+      header.classList.add("visible-header");
+    }
+    lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
+  }, false);
+</script>
+
+
+  <h1 class="text-2xl font-bold mb-2">✈️ Flight Plan for Drone {{ drone_id }}</h1>
+  <p class="text-gray-300 mb-4">🕒 Scheduled at: <strong>{{ flight_time }}</strong></p>
+
+  <div id="map" style="height: 500px; width: 90%;" class="rounded-lg shadow-lg"></div>
+<script>
+  var map = L.map('map').setView([{{ o_lat }}, {{ o_lng }}], 10);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19
+  }).addTo(map);
+
+  // Start & end markers
+  L.marker([{{ o_lat }}, {{ o_lng }}]).addTo(map).bindPopup("Origin");
+  L.marker([{{ d_lat }}, {{ d_lng }}]).addTo(map).bindPopup("Destination");
+
+  // Restricted zones
+  {% for zone in restricted_zones %}
+  L.circle([{{ zone.lat }}, {{ zone.lng }}], {
+    color: "red", fillColor: "#f03", fillOpacity: 0.5,
+    radius: {{ zone.radius * 1000 }}
+  }).addTo(map);
+  {% endfor %}
+
+  // Flight path line
+  var waypoints = [
+    {% for wp in waypoints %}
+    [{{ wp[0] }}, {{ wp[1] }}],
+    {% endfor %}
+  ];
+  L.polyline(waypoints, {color: 'blue', weight: 3}).addTo(map);
+</script>
+</body>
+</html>

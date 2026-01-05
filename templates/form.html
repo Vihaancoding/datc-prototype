@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DATC Drone Registration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+
+  <form method="POST" action="/submit"
+        class="max-w-2xl w-full grid grid-cols-2 gap-4 bg-gray-800 p-8 rounded-lg shadow-lg">
+
+    <h2 class="text-2xl font-bold text-center col-span-2 mb-4">
+      🚁 DATC Drone Registration
+    </h2>
+
+    <!-- Registration Type -->
+    <label class="col-span-2">Registration Type:</label>
+    <select name="user_type" required
+            class="p-2 rounded bg-white text-gray-900 col-span-2">
+      <option value="">-- Select --</option>
+      <option value="Person">Individual (Person)</option>
+      <option value="Commercial">Company (Commercial Use)</option>
+    </select>
+
+    <!-- Company Name -->
+    <input type="text" name="company_name"
+           placeholder="Company Name (if Commercial)"
+           class="p-2 rounded bg-white text-gray-900 col-span-2">
+
+    <!-- Drone Type -->
+    <select name="type" required
+            class="p-2 rounded bg-white text-gray-900 col-span-2">
+      <option value="">Select Drone Type</option>
+      <option value="Surveillance">Surveillance</option>
+      <option value="Delivery">Delivery</option>
+      <option value="Agriculture">Agriculture</option>
+      <option value="Hobby">Hobby</option>
+      <option value="Mapping">Mapping</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <!-- Year -->
+    <input type="text" name="year"
+           placeholder="Year of Manufacture" required
+           class="p-2 rounded bg-white text-gray-900">
+
+    <!-- Model -->
+    <input type="text" name="model"
+           placeholder="Model" required
+           class="p-2 rounded bg-white text-gray-900">
+
+    <!-- Manufacturer -->
+    <input type="text" name="manufacturer"
+           placeholder="Manufacturer" required
+           class="p-2 rounded bg-white text-gray-900 col-span-2">
+
+    <!-- Email -->
+    <input type="email" name="email"
+           placeholder="Owner's Email" required
+           class="p-2 rounded bg-white text-gray-900 col-span-2">
+
+    <!-- Flight Controller -->
+    <label class="col-span-2 font-semibold">Select Flight Controller:</label>
+    <select name="controller" required
+            class="p-2 rounded bg-white text-gray-900 col-span-2">
+      <option value="">-- Choose Controller --</option>
+      <option value="Pixhawk">Pixhawk</option>
+      <option value="DJI Naza">DJI Naza</option>
+      <option value="Kakute F7">Kakute F7</option>
+      <option value="Ardupilot">Ardupilot</option>
+      <option value="Betaflight">Betaflight</option>
+    </select>
+
+    <!-- Capability Header -->
+    <h3 class="col-span-2 mt-6 text-lg font-semibold">
+      Drone Physical Capability
+    </h3>
+
+    <!-- Capability Inputs -->
+    <input type="number" step="0.01" name="takeoff_weight"
+           placeholder="Total Takeoff Weight (kg)" required
+           class="p-2 rounded bg-white text-gray-900 col-span-2">
+
+    <input type="number" step="0.01" name="max_payload"
+           placeholder="Max Payload (kg)" required
+           class="p-2 rounded bg-white text-gray-900 col-span-2">
+
+    <input type="number" step="0.01" name="motor_thrust"
+           placeholder="Motor Max Thrust (kg, per motor)" required
+           class="p-2 rounded bg-white text-gray-900 col-span-2">
+
+    <input type="number" name="motor_count"
+           placeholder="Number of Motors" required
+           class="p-2 rounded bg-white text-gray-900 col-span-2">
+
+    <input type="number" step="0.1" name="battery_wh"
+           placeholder="Battery Capacity (Wh)" required
+           class="p-2 rounded bg-white text-gray-900 col-span-2">
+
+    <input type="number" step="1" name="cruise_power"
+           placeholder="Estimated Cruise Power (W)" required
+           class="p-2 rounded bg-white text-gray-900 col-span-2">
+
+    <input type="number" step="1" name="wind_limit"
+           placeholder="Max Wind Tolerance (km/h)" required
+           class="p-2 rounded bg-white text-gray-900 col-span-2">
+
+    <!-- Submit -->
+    <button type="submit"
+            class="col-span-2 bg-blue-600 hover:bg-blue-700 p-3 rounded font-semibold text-white mt-4">
+      ✅ Submit Registration
+    </button>
+
+  </form>
+
+</body>
+</html>

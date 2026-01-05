@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Company Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+  <form method="POST" action="/login"
+        class="bg-gray-800 p-8 rounded-lg max-w-md w-full grid gap-4 shadow-lg">
+    <h2 class="text-2xl font-bold text-center mb-4">🔐 Company Login</h2>
+
+    <input type="text" name="company_name" placeholder="Company Name" required
+           class="p-2 rounded text-black">
+
+    <input type="password" name="password" placeholder="Password" required
+           class="p-2 rounded text-black">
+
+    <!-- ✅ Math Captcha -->
+    <input type="number" name="captcha" placeholder="What is {{ num1 }} + {{ num2 }}?" required
+           class="p-2 rounded text-black">
+
+    <button type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded font-semibold">
+      Login
+    </button>
+
+    {% if error %}
+      <p class="text-red-400 text-sm text-center mt-2">{{ error }}</p>
+    {% endif %}
+  </form>
+</body>
+</html>

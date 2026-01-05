@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drone {{ drone_id }} Location</title>
+  <script src="{{ url_for('static', filename='tailwind.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='leaflet.css') }}" />
+  <script src="{{ url_for('static', filename='leaflet.js') }}"></script>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen flex flex-col pt-24 items-center justify-center">
+{% include "header.html" %}
+
+  <!-- Title -->
+  <h1 class="text-2xl font-bold mb-4">📍 Drone {{ drone_id }} Location</h1>
+
+  <!-- Location Error -->
+  {% if location_error %}
+    <p class="text-red-500 mb-4">⚠️ Location not found (no GPS data)</p>
+  {% endif %}
+
+  <!-- Telemetry -->
+  <div class="bg-gray-800 p-4 rounded-lg w-[90%] mb-5 shadow">
+    <h2 class="text-lg font-semibold mb-2">📡 Telemetry Data</h2>
+    <pre id="telemetry-box" class="bg-gray-900 p-3 rounded text-green-400 text-sm overflow-x-auto">
+      Loading telemetry...
+    </pre>
+  </div>
+
+  <!-- Map (hidden if location not found) -->
+  {% if not location_error %}
+    <div id="map" class="h-[500px] w-[90%] rounded-lg shadow-lg mb-5"></div>
+  {% endif %}
+
+    <button onclick="window.location.href='{{ url_for('request_flight_plan', drone_id=drone_id) }}'">
+  Request Flight Plan
+</button>
+
+
+  {% if not location_error %}
+  <script>
+    // Leaflet Map (only if GPS exists)
+    var map = L.map('map').setView([{{ lat }}, {{ lng }}], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var droneIcon = L.icon({
+      iconUrl: "/static/yellow_drone.png",
+      iconSize: [65, 65],
+      iconAnchor: [32, 32],
+      popupAnchor: [0, -32]
+    });
+
+    var marker = L.marker([{{ lat }}, {{ lng }}], { icon: droneIcon }).addTo(map)
+      .bindPopup("Drone {{ drone_id }} is at Latitude: {{ lat }}, Longitude: {{ lng }}!")
+      .openPopup();
+  </script>
+  {% endif %}
+
+  <script>
+    // Refresh Telemetry Data every 2 seconds
+    function updateTelemetry() {
+      fetch(`/api/telemetry?drone_id={{ drone_id }}`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("telemetry-box").textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(err => {
+          document.getElementById("telemetry-box").textContent = "No telemetry yet...";
+        });
+    }
+    setInterval(updateTelemetry, 2000);
+    updateTelemetry();
+  </script>
+</body>
+</html>
