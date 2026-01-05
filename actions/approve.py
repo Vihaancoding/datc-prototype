@@ -1,3 +1,8 @@
+import os
+import qrcode
+from PIL import Image
+from cryptography.fernet import Fernet
+from dotenv import load_dotenv
 from db.db_helpers import get_db
 from logic.capability import compute_capability
 from logic.authorization import auto_assign_authorization
@@ -5,6 +10,61 @@ from emailer.notifications import send_approval_email
 from logic.auth_context import CURRENT_AUTHORIZER, current_timestamp
 from datetime import datetime
 
+# Initialize encryption and base URL
+load_dotenv()
+fernet = Fernet(os.getenv("FERNET_KEY").encode())
+BASE_URL = os.getenv("BASE_URL", "http://localhost:5000")
+
+
+def generate_qr_code(drone_id, logo_path="owl_logo.png", output_dir="qr_codes"):
+    """
+    Generate a QR code with logo overlay for drone verification.
+    
+    Args:
+        drone_id: Unique drone identifier
+        logo_path: Path to logo image file (default: "owl_logo.png")
+        output_dir: Directory to save QR code (default: "qr_codes")
+    
+    Returns:
+        tuple: (verify_url, qr_path) - The verification URL and path to saved QR code
+    """
+    # Encrypt drone ID and create verification URL
+    encrypted = fernet.encrypt(drone_id.encode()).decode()
+    verify_url = f"{BASE_URL}/verify?token={encrypted}"
+    
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, f"{drone_id}.png")
+    
+    # Step 1: Generate QR code with high error correction
+    qr = qrcode.QRCode(
+        version=4,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,  # High correction for logo overlay
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(verify_url)
+    qr.make(fit=True)
+    
+    # Step 2: Create QR image
+    qr_img = qr.make_image(fill_color="black", back_color="white").convert('RGB')
+    
+    # Step 3: Load and resize logo
+    if os.path.exists(logo_path):
+        logo = Image.open(logo_path)
+        qr_width, qr_height = qr_img.size
+        logo_size = int(qr_width / 4)  # Logo is 1/4th of QR size
+        logo = logo.resize((logo_size, logo_size), Image.LANCZOS)
+        
+        # Step 4: Paste logo in center
+        pos = ((qr_width - logo_size) // 2, (qr_height - logo_size) // 2)
+        qr_img.paste(logo, pos, mask=logo if logo.mode == 'RGBA' else None)
+    else:
+        print(f"⚠️ Warning: Logo not found at {logo_path}, saving plain QR")
+    
+    # Step 5: Save final QR image
+    qr_img.save(output_path)
+    return verify_url, output_path
 
 
 def approve_drone(
@@ -143,49 +203,12 @@ def approve_drone(
     conn.commit()
     conn.close()
 
-    def generate_qr(drone_id):
-        encrypted = fernet.encrypt(drone_id.encode()).decode()
-        verify_url = f"{BASE_URL}/verify?token={encrypted}"
-
-        logo_path = "owl_logo.png"  # ✅ No comma here
-        output_path = f"qr_codes/{drone_id}.png"
-
-        # Step 1: Generate QR with high error correction
-        qr = qrcode.QRCode(
-            version=4,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,  # allow space for logo
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(verify_url)
-        qr.make(fit=True)
-
-        qr_img = qr.make_image(fill_color="black", back_color="white").convert('RGB')
-
-        # Step 2: Open and resize logo
-        if os.path.exists(logo_path):
-            logo = Image.open(logo_path)
-            qr_width, qr_height = qr_img.size
-            logo_size = int(qr_width / 4)
-            logo = logo.resize((logo_size, logo_size), Image.LANCZOS)
-
-            # Step 3: Paste logo in center
-            pos = ((qr_width - logo_size) // 2, (qr_height - logo_size) // 2)
-            qr_img.paste(logo, pos, mask=logo if logo.mode == 'RGBA' else None)
-
-        else:
-            print("⚠️ Warning: Logo not found, saving plain QR")
-
-        # Step 4: Save final QR image
-        qr_img.save(output_path)
-        return verify_url, output_path
-
     # 📧 Send approval email (NEW SIGNATURE)
     approved_by = CURRENT_AUTHORIZER["name"]
     approved_role = CURRENT_AUTHORIZER["role"]
     approved_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # ✅ Generate QR code with encrypted token
-    verify_url, qr_path = generate_qr(drone_id)
+    verify_url, qr_path = generate_qr_code(qr_content)
 
     send_approval_email(
         email,
