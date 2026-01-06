@@ -40,6 +40,8 @@ from logic.auth_context import CURRENT_AUTHORIZER
 print("  - ui.login...")
 from ui.login import login
 
+import os
+
 print("✅ Imports loaded")
 
 # ==============================

@@ -27,7 +27,10 @@ def generate_qr_with_logo(data, logo_path, output_path):
     qr.make(fit=True)
 
     # Step 2: Create QR image
-    qr_img = qr.make_image(fill_color="dark blue", back_color="white").convert("RGB")
+    qr_img = qr.make_image(
+        fill_color="#003366",  # dark blue
+        back_color="white"
+    ).convert("RGB")
 
     # Step 3: Load the owl logo
     logo = Image.open(logo_path)
@@ -225,7 +228,7 @@ def approve_drone(
     approved_role = CURRENT_AUTHORIZER["role"]
     approved_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # ✅ Generate QR code with encrypted token
-    qr_path, verify_url = generate_qr_code(qr_content)
+    verify_url, qr_path = generate_qr(qr_content)
 
     send_approval_email(
         email,

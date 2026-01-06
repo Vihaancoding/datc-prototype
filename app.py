@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template
+
 import sqlite3, os, uuid, qrcode, smtplib
 from email.message import EmailMessage
 from dotenv import load_dotenv
@@ -8,6 +9,8 @@ import qrcode
 from PIL import Image
 from datetime import datetime
 import os
+from logic.capability import compute_capability
+
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:5000")
 
@@ -97,26 +100,22 @@ def form():
 from datetime import datetime, timedelta
 @app.route('/submit', methods=['POST'])
 def submit():
-
-    name = request.form.get('name', '').strip()
     drone_type = request.form['type']
     year = request.form['year']
     model = request.form['model']
     manufacturer = request.form['manufacturer']
     email = request.form['email']
     controller = request.form.get('controller', '').strip()
-
-
-    user_type = request.form['user_type']
     company_name = request.form.get('company_name', '').strip()
 
     # ✅ Create unique drone ID
     drone_id = f"DATC-{drone_type}-{year}-{company_name.replace(' ', '')}-{uuid.uuid4().hex[:6]}"
 
-    qr_active ="0"
+    # ❌ NO QR HERE
+    qr_active = 0
+    qr_path = None
 
-
-    # ✅ Set expiry 5 years from now
+    # ✅ License expiry (future use)
     issue_date = datetime.now()
     license_expiry = (issue_date + timedelta(days=5 * 365)).strftime('%Y-%m-%d')
 
@@ -133,23 +132,35 @@ def submit():
     # Validation
     if data["takeoff_weight"] <= 0:
         abort(400, "Invalid takeoff weight")
-
     if data["motor_count"] < 4:
         abort(400, "Motor count too low")
-
     if data["battery_wh"] <= 0:
         abort(400, "Invalid battery capacity")
 
-    # Capability computation
-    capability = compute_capability(data)
+    # Capability
+    (
+        thrust_margin,
+        thrust_state,
+        safe_time,
+        endurance_state,
+        payload_ratio,
+        wind_risk
+    ) = compute_capability(
+        data["motor_thrust"],
+        data["motor_count"],
+        data["takeoff_weight"],
+        data["max_payload"],
+        data["battery_wh"],
+        data["cruise_power"],
+        data["wind_limit"],
+    )
 
-    if capability["status"] == "REJECT":
+    if thrust_state == "REJECT":
         abort(400, "Drone rejected: insufficient thrust margin")
+
     submitted_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Submission timestamp (server-side)
-
-    # ✅ Save drone data in database
+    # ✅ Save drone as PENDING
     conn = sqlite3.connect('mydatabase.db')
     c = conn.cursor()
     c.execute('''
@@ -157,18 +168,16 @@ def submit():
             name, Type, year, model, Manufacturer,
             email, qr_content, qr_active, qr_path,
             license_expiry, flight_controller,
-
             takeoff_weight, max_payload, motor_thrust, motor_count,
             battery_wh, cruise_power, wind_limit,
             thrust_margin, safe_flight_time, capability_status,
-            submitted_at
+            submitted_at, state
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         company_name, drone_type, year, model, manufacturer,
         email, drone_id, qr_active, qr_path,
         license_expiry, controller,
-
         data["takeoff_weight"],
         data["max_payload"],
         data["motor_thrust"],
@@ -176,22 +185,18 @@ def submit():
         data["battery_wh"],
         data["cruise_power"],
         data["wind_limit"],
-        capability["thrust_margin"],
-        capability["safe_flight_time_min"],
-        capability["status"],
-        submitted_at
+        thrust_margin,
+        safe_time,
+        thrust_state,
+        submitted_at,
+        "REGISTERED"
     ))
 
     conn.commit()
     conn.close()
 
+    return render_template('success.html', drone_id=drone_id, status="Pending Approval")
 
-
-    # ✅ Send confirmation email
-    send_email(email, qr_path, False, verify_url)
-
-
-    return render_template('success.html', drone_id=drone_id, status="Registered")
 
 
 
@@ -224,7 +229,8 @@ def verify():
     conn.close()
 
     if not result:
-        return render_template("not_found")
+        return render_template("not_found.html")
+
 
     name, dtype, year, model, manufacturer, active, license_expiry = result
 
@@ -232,7 +238,7 @@ def verify():
         status = "❌ LICENSE EXPIRED"
     else:
         status = "✅ LICENSE VALID" if active == 1 else "❌ LICENSE SUSPENDED"
-    from flask import render_template
+
 
     return render_template("verify.html",
                            drone_id=drone_id,

@@ -3,6 +3,13 @@ import math
 import json
 from datetime import datetime, timedelta
 from geopy.distance import geodesic
+# =====================================================
+# LEGACY / EXPERIMENTAL MODULE
+# -----------------------------------------------------
+# This file is NOT used in DATC 1.0 runtime.
+# Kept for reference and historical experimentation.
+# Do NOT import or modify unless explicitly reactivated.
+# =====================================================
 
 # ===== CONFIG =====
 SPACING_METERS = 50
